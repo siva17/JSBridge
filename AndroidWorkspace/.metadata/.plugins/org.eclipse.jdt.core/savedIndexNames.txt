@@ -1,0 +1,6 @@
+INDEX VERSION 1.126+/Users/admin/Desktop/github/JSBridge/AndroidWorkspace/.metadata/.plugins/org.eclipse.jdt.core
+2566882097.index
+3459768281.index
+1493211330.index
+2088703729.index
+1270315800.index
