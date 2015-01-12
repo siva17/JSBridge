@@ -1,5 +1,5 @@
 //
-//  TestAPIOne.h
+//  JSBridgeBase.h
 //  JSBridge
 //
 //  Created by Siva RamaKrishna Ravuri
@@ -27,6 +27,11 @@
 //
 //
 
-#import "JSBridgeAPIBase.h"
-@interface TestAPIOne : JSBridgeAPIBase
+#import "JSBridge.h"
+
+@interface JSBridgeBase : NSObject
+@property(nonatomic,assign) JSBridge  *jsBridge;
+@property(nonatomic,assign) UIWebView *jsbWebView;
+-(id)initWithBridge:(JSBridge *)bridge webView:(UIWebView *)webView;
+-(void)callCallback:(NSDictionary *)config;
 @end

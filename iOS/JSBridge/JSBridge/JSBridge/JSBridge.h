@@ -28,11 +28,9 @@
 //
 
 #import "JSBInclude.h"
-
 @interface JSBridge : NSObject<UIWebViewDelegate>
 -(id)initWithWebView:(UIWebView*)webView webViewDelegate:(NSObject<UIWebViewDelegate>*)webViewDelegate bundle:(NSBundle*)bundle handler:(JSBHandler)handler;
 -(void)send:(NSString *)eventName data:(id)data responseCallback:(JSBResponseCallback)responseCallback;
 -(void)registerEvent:(NSString *)eventName handler:(JSBHandler)handler;
 -(void)deRegisterEvent:(NSString *)eventName handler:(JSBHandler)handler;
--(void)registerJavaScriptAPI:(NSObject *)instance;
 @end

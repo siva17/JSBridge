@@ -52,9 +52,14 @@
 #define JS_BRIDGE_SEND_NATIVE_QUEUE @"_handleMessageFromNative"
 
 #define JSB_LOG_ENABLE              1
+#define JSB_LOG_SIMPLE				1
 
 #ifdef JSB_LOG_ENABLE
+#if(JSB_LOG_SIMPLE == 1)
+#define JSBLog(s, ...) NSLog(@"JSBridge: %@\n", [NSString stringWithFormat:(s), ## __VA_ARGS__]);
+#else
 #define JSBLog(s, ...) NSLog(@"\t<%p %@:(%d)>\t%@\n", self, [[NSString stringWithUTF8String:__FUNCTION__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ## __VA_ARGS__]);
+#endif
 #else
 #define JSBLog(s, ...)
 #endif

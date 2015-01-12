@@ -28,14 +28,14 @@
 //
 
 ;(function(w,doc) {
-	if(w.JSBridge)return;
+    if(w.JSBridge)return;
 
 // PRIVATE VARIABLES
-	//!!! WARNING - Should be in SYNC with Native Code defines - Begin
-	var JSBRIDGE_URL_SCHEME  = 'jsbridgeurlscheme';
-	var JSBRIDGE_URL_MESSAGE = '__JSB_URL_MESSAGE__';
-	var JSBRIDGE_URL_PARAM   = '__JSB_PARAM_NONE__';
-	//!!! WARNING - Should be in SYNC with Native Code defines - End
+    //!!! WARNING - Should be in SYNC with Native Code defines - Begin
+    var JSBRIDGE_URL_SCHEME  = 'jsbridgeurlscheme';
+    var JSBRIDGE_URL_MESSAGE = '__JSB_URL_MESSAGE__';
+    var JSBRIDGE_URL_PARAM   = '__JSB_PARAM_NONE__';
+    //!!! WARNING - Should be in SYNC with Native Code defines - End
 
     var ua                  = navigator.userAgent;
     var isIOSDevice         = /iP(hone|od|ad)/g.test(ua);
@@ -47,7 +47,7 @@
     var uniqueId            = 1;
     var messagingIframe;
 
-    // PRIVATE METHODS
+// PRIVATE METHODS
 
     function JSBridgeLog() {
         if (typeof console != 'undefined') {
@@ -65,12 +65,9 @@
     }
 
     function callObjCAPI(name,data) {
-
-        var methodDetails = name.split('.');
-
         // Should not called triggerNativeCall as iFrame needs to be deleted in order to get the retvalue.
         var iframe = document.createElement("IFRAME");
-        iframe.setAttribute("src", getIFrameSrc(methodDetails[0] + "&" + encodeURIComponent(methodDetails[1]) + "&" + data));
+        iframe.setAttribute("src", getIFrameSrc(name + "&" + data));
         document.documentElement.appendChild(iframe);
         iframe.parentNode.removeChild(iframe);
         iframe = null;
@@ -131,7 +128,7 @@
         });
     }
 
-    // PUBLIC METHODS
+// PUBLIC METHODS
     function init(bridgeHandler) {
         if(JSBridge.bridgeHandler){JSBridgeLogException(e,"init");}
         JSBridge.bridgeHandler  = bridgeHandler;
@@ -167,7 +164,9 @@
                     responseCallbacks[cbID] = responseCallback;
                     data["callbackID"] = cbID;
                 }
-                try{data = JSON.stringify(data);}catch(e){}
+                try{
+                    data = JSON.stringify(data);
+                }catch(e){}
             }
 
             if(isIOSDevice) {

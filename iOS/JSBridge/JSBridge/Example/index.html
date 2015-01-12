@@ -61,6 +61,16 @@
                 log('JS got response', response);
             });
         };
+        window.showMap = function() {
+            log('JS calling handler "Test.showMap"');
+            bridge.send('Test.showMap', {
+                position:{x:10,y:10,width:200,height:200}
+            }, null);
+        };
+        window.hideMap = function() {
+            log('JS calling handler "Test.hideMap"');
+            bridge.send('Test.hideMap', null, null);
+        };
     });
     
     function testLogCallBack(c) {
@@ -80,32 +90,32 @@
         document.getElementById("responseID2").innerText = str;
     }
     function testOne() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APIOne")');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APIOne"));
+        testUpdateRequest('JSBridge.callAPI("Test.APIOne")');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APIOne"));
     }
     function testTwo() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APITwo",{"t1":"t1 Value"})');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APITwo",{"t1":"t1 Value"}));
+        testUpdateRequest('JSBridge.callAPI("Test.APITwo",{"t1":"t1 Value"})');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APITwo",{"t1":"t1 Value"}));
     }
     function testThree() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APIThree",{"t1":"t1 Value"})');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APIThree",{"t1":"t1 Value"}));
+        testUpdateRequest('JSBridge.callAPI("Test.APIThree",{"t1":"t1 Value"})');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APIThree",{"t1":"t1 Value"}));
     }
     function testFour() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APIFour",{"t1":"t1 Value"},testLogCallBack)');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APIFour",{"t1":"t1 Value"},testLogCallBack));
+        testUpdateRequest('JSBridge.callAPI("Test.APIFour",{"t1":"t1 Value"},testLogCallBack)');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APIFour",{"t1":"t1 Value"},testLogCallBack));
     }
     function testFive() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APIFive",{"t1":"t1 Value"},testLogCallBack)');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APIFive",{"t1":"t1 Value"},testLogCallBack));
+        testUpdateRequest('JSBridge.callAPI("Test.APIFive",{"t1":"t1 Value"},testLogCallBack)');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APIFive",{"t1":"t1 Value"},testLogCallBack));
     }
     function testSix() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APISix",{"t1":"t1 Value"},testLogCallBack)');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APISix",{"t1":"t1 Value"},testLogCallBack));
+        testUpdateRequest('JSBridge.callAPI("Test.APISix",{"t1":"t1 Value"},testLogCallBack)');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APISix",{"t1":"t1 Value"},testLogCallBack));
     }
     function testSeven() {
-        testUpdateRequest('JSBridge.callAPI("TestAPIOne.APISeven",{"t1":"t1 Value"},testLogCallBack)');
-        testUpdateReturnValue(JSBridge.callAPI("TestAPIOne.APISeven",{"t1":"t1 Value"},testLogCallBack));
+        testUpdateRequest('JSBridge.callAPI("Test.APISeven",{"t1":"t1 Value"},testLogCallBack)');
+        testUpdateReturnValue(JSBridge.callAPI("Test.APISeven",{"t1":"t1 Value"},testLogCallBack));
     }
 	</script>
     <button type="button" class="btn btn-primary" onclick="testOne()">API1</button>
@@ -124,5 +134,7 @@
     <br>
     <button type="button" class="btn btn-primary" onclick="sendMessage()">Send message to ObjC</button>
     <button type="button" class="btn btn-primary" onclick="sendEvent()">Fire testObjcCallback</button>
+    <button type="button" class="btn btn-primary" onclick="showMap()">Show Map</button>
+    <button type="button" class="btn btn-primary" onclick="hideMap()">Hide Map</button>
     <div id='log'></div>
 </body></html>

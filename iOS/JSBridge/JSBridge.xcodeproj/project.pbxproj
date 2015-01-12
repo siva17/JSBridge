@@ -15,10 +15,10 @@
 		84CFB0D81A5A188700DF2269 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0D61A5A188700DF2269 /* LaunchScreen.xib */; };
 		84CFB0E41A5A188700DF2269 /* JSBridgeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0E31A5A188700DF2269 /* JSBridgeTests.m */; };
 		84CFB0F11A5A1A0800DF2269 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0EE1A5A1A0800DF2269 /* index.html */; };
-		84CFB0F21A5A1A0800DF2269 /* TestAPIOne.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F01A5A1A0800DF2269 /* TestAPIOne.m */; };
+		84CFB0F21A5A1A0800DF2269 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F01A5A1A0800DF2269 /* Test.m */; };
 		84CFB0FA1A5A1A1000DF2269 /* JSBridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0F61A5A1A1000DF2269 /* JSBridge.js */; };
 		84CFB0FB1A5A1A1000DF2269 /* JSBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F71A5A1A1000DF2269 /* JSBridge.m */; };
-		84CFB0FC1A5A1A1000DF2269 /* JSBridgeAPIBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F91A5A1A1000DF2269 /* JSBridgeAPIBase.m */; };
+		84CFB0FC1A5A1A1000DF2269 /* JSBridgeBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F91A5A1A1000DF2269 /* JSBridgeBase.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,14 +46,14 @@
 		84CFB0E21A5A188700DF2269 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		84CFB0E31A5A188700DF2269 /* JSBridgeTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSBridgeTests.m; sourceTree = "<group>"; };
 		84CFB0EE1A5A1A0800DF2269 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
-		84CFB0EF1A5A1A0800DF2269 /* TestAPIOne.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestAPIOne.h; sourceTree = "<group>"; };
-		84CFB0F01A5A1A0800DF2269 /* TestAPIOne.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestAPIOne.m; sourceTree = "<group>"; };
+		84CFB0EF1A5A1A0800DF2269 /* Test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Test.h; sourceTree = "<group>"; };
+		84CFB0F01A5A1A0800DF2269 /* Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Test.m; sourceTree = "<group>"; };
 		84CFB0F41A5A1A1000DF2269 /* JSBInclude.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBInclude.h; sourceTree = "<group>"; };
 		84CFB0F51A5A1A1000DF2269 /* JSBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBridge.h; sourceTree = "<group>"; };
 		84CFB0F61A5A1A1000DF2269 /* JSBridge.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = JSBridge.js; sourceTree = "<group>"; };
 		84CFB0F71A5A1A1000DF2269 /* JSBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSBridge.m; sourceTree = "<group>"; };
-		84CFB0F81A5A1A1000DF2269 /* JSBridgeAPIBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBridgeAPIBase.h; sourceTree = "<group>"; };
-		84CFB0F91A5A1A1000DF2269 /* JSBridgeAPIBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSBridgeAPIBase.m; sourceTree = "<group>"; };
+		84CFB0F81A5A1A1000DF2269 /* JSBridgeBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBridgeBase.h; sourceTree = "<group>"; };
+		84CFB0F91A5A1A1000DF2269 /* JSBridgeBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSBridgeBase.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,8 +139,8 @@
 			isa = PBXGroup;
 			children = (
 				84CFB0EE1A5A1A0800DF2269 /* index.html */,
-				84CFB0EF1A5A1A0800DF2269 /* TestAPIOne.h */,
-				84CFB0F01A5A1A0800DF2269 /* TestAPIOne.m */,
+				84CFB0EF1A5A1A0800DF2269 /* Test.h */,
+				84CFB0F01A5A1A0800DF2269 /* Test.m */,
 			);
 			path = Example;
 			sourceTree = "<group>";
@@ -152,8 +152,8 @@
 				84CFB0F51A5A1A1000DF2269 /* JSBridge.h */,
 				84CFB0F61A5A1A1000DF2269 /* JSBridge.js */,
 				84CFB0F71A5A1A1000DF2269 /* JSBridge.m */,
-				84CFB0F81A5A1A1000DF2269 /* JSBridgeAPIBase.h */,
-				84CFB0F91A5A1A1000DF2269 /* JSBridgeAPIBase.m */,
+				84CFB0F81A5A1A1000DF2269 /* JSBridgeBase.h */,
+				84CFB0F91A5A1A1000DF2269 /* JSBridgeBase.m */,
 			);
 			path = JSBridge;
 			sourceTree = "<group>";
@@ -263,9 +263,9 @@
 				84CFB0D01A5A188700DF2269 /* ViewController.m in Sources */,
 				84CFB0CD1A5A188700DF2269 /* AppDelegate.m in Sources */,
 				84CFB0FB1A5A1A1000DF2269 /* JSBridge.m in Sources */,
-				84CFB0FC1A5A1A1000DF2269 /* JSBridgeAPIBase.m in Sources */,
+				84CFB0FC1A5A1A1000DF2269 /* JSBridgeBase.m in Sources */,
 				84CFB0CA1A5A188700DF2269 /* main.m in Sources */,
-				84CFB0F21A5A1A0800DF2269 /* TestAPIOne.m in Sources */,
+				84CFB0F21A5A1A0800DF2269 /* Test.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,6 +460,7 @@
 				84CFB0E91A5A188700DF2269 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		84CFB0EA1A5A188700DF2269 /* Build configuration list for PBXNativeTarget "JSBridgeTests" */ = {
 			isa = XCConfigurationList;
@@ -468,6 +469,7 @@
 				84CFB0EC1A5A188700DF2269 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

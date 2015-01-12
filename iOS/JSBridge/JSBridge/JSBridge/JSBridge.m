@@ -29,6 +29,7 @@
 
 #import <objc/runtime.h>
 #import "JSBridge.h"
+#import "JSBridgeBase.h"
 
 @interface JSBridge()
 @property(nonatomic,assign) UIWebView               *jsWebView;
@@ -56,27 +57,23 @@
 @synthesize startupMessageQueue;
 @synthesize responseCallbacks;
 @synthesize messageHandlers;
+@synthesize nativeModules;
 
 #pragma mark - Alloc-Dealloc
 
--(NSMutableDictionary *)nativeModules {
-    if (!_nativeModules) {
-        _nativeModules = [[NSMutableDictionary alloc] init];
-    }
-    return _nativeModules;
-}
-
 -(void)initialize {
-    jsWebView.delegate  = nil;
     jsWebViewDelegate   = nil;
     resourceBundle      = nil;
     bridgeHandler       = nil;
-    RELEASE_MEM(jsWebView);
+    uniqueId            = 0;
+    numberOfUrlRequests = 0;
     
+    if(jsWebView) jsWebView.delegate = nil;
+    RELEASE_MEM(jsWebView);
     RELEASE_MEM(startupMessageQueue);
     RELEASE_MEM(responseCallbacks);
     RELEASE_MEM(messageHandlers);
-    RELEASE_MEM(self.nativeModules);
+    RELEASE_MEM(nativeModules);
 }
 
 -(void)dealloc {
@@ -91,7 +88,7 @@
 
 -(void)dispatchMessage:(NSDictionary *)message {
     NSString *messageJSON = [JSBridge serializeMessage:message];
-    JSBLog(@"JSB Action: SEND: %@",messageJSON);
+    JSBLog(@"dispatchMessage: SEND: %@",messageJSON);
 
     messageJSON = [messageJSON stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
     messageJSON = [messageJSON stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
@@ -121,22 +118,95 @@
     }
 }
 
+-(NSObject *)getNativeModuleFromName:(NSString *)name {
+    NSObject *nativeModule	= [nativeModules objectForKey:name];
+    if(nativeModule == nil) {
+        Class objClass = NSClassFromString(name);
+        if(objClass) {
+            @try {
+                nativeModule = [(JSBridgeBase *)[objClass alloc] initWithBridge:self webView:jsWebView];
+                [nativeModules setObject:nativeModule forKey:name];
+                }
+            @catch (NSException *exception) {
+                JSBLog(@"getNativeModuleFromName: EXCEPTION: %@",name);
+                nativeModule = nil;
+            }
+            @finally {
+            }
+        } else {
+            JSBLog(@"getNativeModuleFromName: Unsupported Module: %@",name);
+        }
+    }
+    return nativeModule;
+}
+
+-(void)processEventHandler:(NSDictionary *)message responseCallback:(JSBResponseCallback)responseCallback {
+    NSString *eventName = message[@"eventName"];
+    if(eventName) {
+        JSBHandler handler = messageHandlers[eventName];
+        if(!handler) {
+            @try {
+                // eventName is not registered and so create an instance of the API
+                NSArray *api        = [eventName componentsSeparatedByString:@"."];
+                NSObject *jsModule  = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0]];
+                if(jsModule) {
+                    
+                    SEL selector            = NSSelectorFromString([NSString stringWithFormat:@"JSBEvent_%@:responseCallback:",(NSString*)[api objectAtIndex:1]]);
+                    NSMethodSignature *sig  = [[jsModule class] instanceMethodSignatureForSelector:selector];
+                    if(sig) {
+                        NSInvocation *invoker   = [NSInvocation invocationWithMethodSignature:sig];
+                        invoker.selector        = selector;
+                        invoker.target          = jsModule;
+                        [self registerEvent:eventName handler:^(id data, JSBResponseCallback responseCallback) {
+                            NSDictionary *configData = message[@"data"];
+                            if(configData) [invoker setArgument:&configData atIndex:2];
+                            if(responseCallback) [invoker setArgument:&responseCallback atIndex:3];
+                            [invoker invoke];
+                        }];
+                        
+                        handler = messageHandlers[eventName];
+                    } else {
+                        JSBLog(@"processEventHandler: EXCEPTION: Unsupported Event: %@",eventName);
+                    }
+                } else {
+                    JSBLog(@"processEventHandler: EXCEPTION: No Plugin: %@",eventName);
+                }
+            }
+            @catch (NSException *exception) {
+                JSBLog(@"processEventHandler: EXCEPTION: %@",eventName);
+                handler = nil;
+            }
+            @finally {
+            }
+        }
+        if(handler) {
+            handler(message[@"data"], responseCallback);
+        }
+    } else {
+        if(bridgeHandler) {
+            bridgeHandler(message[@"data"], responseCallback);
+        } else {
+            JSBLog(@"processEventHandler: EXCEPTION: No handler for message from JS: %@",message);
+        }
+    }
+}
+
 -(void)flushMessageQueue {
     NSString *messageQueueString = [jsWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"%@.%@();",JS_BRIDGE,JS_BRIDGE_GET_JS_QUEUE]];
     
     id messages = [JSBridge deserializeMessageJSON:messageQueueString];
     if(![messages isKindOfClass:[NSArray class]]) {
-        JSBLog(@"JSBridge: WARNING: Invalid %@ received: %@", [messages class], messages);
+        JSBLog(@"flushMessageQueue: WARNING: Invalid %@ received: %@", [messages class], messages);
         return;
     }
     
     for (NSDictionary *message in messages) {
         if (![message isKindOfClass:[NSDictionary  class]]) {
-            JSBLog(@"JSBridge: WARNING: Invalid %@ received: %@", [message class], message);
+            JSBLog(@"flushMessageQueue: WARNING: Invalid %@ received: %@", [message class], message);
             continue;
         }
-        JSBLog(@"JSB Action: RCVD: %@",message);
-        
+        JSBLog(@"flushMessageQueue: RCVD: %@",message);
+
         NSString* responseId = message[@"responseId"];
         if (responseId) {
             JSBResponseCallback responseCallback = responseCallbacks[responseId];
@@ -160,14 +230,14 @@
                 };
             }
             
-            JSBHandler handler = bridgeHandler;
             if(message[@"eventName"]) {
-                handler = messageHandlers[message[@"eventName"]];
-            }
-            if(handler) {
-                handler(message[@"data"], responseCallback);
+                [self processEventHandler:message responseCallback:responseCallback];
             } else {
-                JSBLog(@"JSBridge: EXCEPTION: No handler for message from JS: %@",message);
+                if(bridgeHandler) {
+                    bridgeHandler(message[@"data"], responseCallback);
+                } else {
+                    JSBLog(@"flushMessageQueue: EXCEPTION: No handler for message from JS: %@",message);
+                }
             }
         }
     }
@@ -175,37 +245,46 @@
 
 -(void)processJSAPIRequest:(UIWebView *)webView param:(NSString *)param {
     
-    NSArray  *components= [[param substringFromIndex:1] componentsSeparatedByString:@"&"];
-    NSString *obj		= (NSString*)[components objectAtIndex:0];
-    NSString *method	= [(NSString*)[components objectAtIndex:1]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    NSString *configStr	= [(NSString*)[components objectAtIndex:2]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    __unsafe_unretained NSDictionary *config = [NSJSONSerialization JSONObjectWithData:[configStr dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-    NSObject* jsModule	= [self.nativeModules objectForKey:obj];
+    JSBLog(@"processJSAPIRequest: RCVD: %@",param);
     
-    // execute the interfacing method
-    SEL selector = NSSelectorFromString(method);
-    NSMethodSignature* sig = [[jsModule class] instanceMethodSignatureForSelector:selector];
-    NSInvocation* invoker = [NSInvocation invocationWithMethodSignature:sig];
-    invoker.selector = selector;
-    invoker.target = jsModule;
-    if(config) [invoker setArgument:&config atIndex:2];
-    [invoker invoke];
+    NSArray *components = [[param substringFromIndex:1] componentsSeparatedByString:@"&"];
     
-    //return the value by using javascript
-    if([sig methodReturnLength] > 0) {
-        NSString *retValue;
-        [invoker getReturnValue:&retValue];
-        if(retValue) {
-            retValue = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,(CFStringRef) retValue, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8));
-            [webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"JSBridge.nativeReturnValue = \"%@;\"", retValue]];
+    @try {
+        // execute the interfacing method
+        NSArray  *api           = [(NSString*)[components objectAtIndex:0] componentsSeparatedByString:@"."];
+        NSObject *jsModule      = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0]];
+        
+        SEL selector            = NSSelectorFromString([NSString stringWithFormat:@"JSBAPI_%@",(NSString*)[api objectAtIndex:1]]);
+        NSMethodSignature *sig  = [[jsModule class] instanceMethodSignatureForSelector:selector];
+        NSInvocation *invoker   = [NSInvocation invocationWithMethodSignature:sig];
+        invoker.selector        = selector;
+        invoker.target          = jsModule;
+        NSString *configStr     = [(NSString*)[components objectAtIndex:1]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        __unsafe_unretained NSDictionary *configData = [NSJSONSerialization JSONObjectWithData:[configStr dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+        if(configData) [invoker setArgument:&configData atIndex:2];
+        [invoker invoke];
+        
+        //return the value by using javascript
+        if([sig methodReturnLength] > 0) {
+            NSString *retValue;
+            [invoker getReturnValue:&retValue];
+            if(retValue) {
+                retValue = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,(CFStringRef) retValue, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8));
+                [webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"JSBridge.nativeReturnValue = \"%@;\"", retValue]];
+            } else {
+                [webView stringByEvaluatingJavaScriptFromString:@"JSBridge.nativeReturnValue=null;"];
+            }
         } else {
             [webView stringByEvaluatingJavaScriptFromString:@"JSBridge.nativeReturnValue=null;"];
         }
-    } else {
-        [webView stringByEvaluatingJavaScriptFromString:@"JSBridge.nativeReturnValue=null;"];
+        configData = nil;
+        invoker = nil;
     }
-    config = nil;
-    invoker = nil;
+    @catch (NSException *exception) {
+        JSBLog(@"processJSAPIRequest: EXCEPTION: %@",[components objectAtIndex:0]);
+    }
+    @finally {
+    }
 }
 
 #pragma mark - WebView Delegates
@@ -213,7 +292,9 @@
 -(void)webViewDidStartLoad:(UIWebView *)webView {
     if(webView != jsWebView) return;
     numberOfUrlRequests++;
-    
+
+    [jsWebView stringByEvaluatingJavaScriptFromString:@"window.isHybridMode = true"];
+
     __strong NSObject<UIWebViewDelegate>* strongDelegate = jsWebViewDelegate;
     if (strongDelegate && [strongDelegate respondsToSelector:@selector(webViewDidStartLoad:)]) {
         [strongDelegate webViewDidStartLoad:webView];
@@ -269,7 +350,7 @@
                 [self processJSAPIRequest:webView param:param];
             }
         } else {
-            JSBLog(@"JSBridge: WARNING: Received unknown command %@",url);
+            JSBLog(@"shouldStartLoadWithRequest: WARNING: Received unknown command %@",url);
         }
         return NO;
     } else {
@@ -297,25 +378,20 @@
     self = [super init];
     if(self) {
         [self initialize];
-        
         jsWebView           = webView;
         jsWebView.delegate  = self;
         jsWebViewDelegate   = webViewDelegate;
         resourceBundle      = bundle;
         bridgeHandler       = handler;
-        
-        uniqueId            = 0;
-        numberOfUrlRequests = 0;
-        
         messageHandlers     = [NSMutableDictionary dictionary];
         startupMessageQueue = [NSMutableArray array];
         responseCallbacks   = [NSMutableDictionary dictionary];
+        nativeModules       = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
 -(void)send:(NSString *)eventName data:(id)data responseCallback:(JSBResponseCallback)responseCallback {
-    
     NSMutableDictionary* message = [NSMutableDictionary dictionary];
     
     if(data) message[@"data"] = data;
@@ -328,7 +404,6 @@
     }
     
     [self queueMessage:message];
-
 }
 
 -(void)registerEvent:(NSString *)eventName handler:(JSBHandler)handler {
@@ -336,10 +411,6 @@
 }
 -(void)deRegisterEvent:(NSString *)eventName handler:(JSBHandler)handler {
     [messageHandlers removeObjectForKey:eventName];
-}
-
--(void)registerJavaScriptAPI:(NSObject *)instance {
-    [self.nativeModules setValue:instance forKey:NSStringFromClass([instance class])];
 }
 
 @end

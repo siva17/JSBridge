@@ -29,11 +29,10 @@
 
 #import "ViewController.h"
 #import "JSBridge.h"
-#import "TestAPIOne.h"
 
 @interface ViewController ()
-@property(nonatomic,retain) IBOutlet UIWebView	*jsbWebView;
-@property(nonatomic,retain) JSBridge			*bridge;
+@property(nonatomic,retain) UIWebView   *jsbWebView;
+@property(nonatomic,retain) JSBridge    *bridge;
 @end
 
 @implementation ViewController
@@ -41,55 +40,58 @@
 @synthesize jsbWebView;
 @synthesize bridge;
 
--(IBAction)reloadWebView:(id)sender {
-    [jsbWebView reload];
-}
--(IBAction)sendMessage:(id)sender {
-    [bridge send:nil data:@"A string sent from ObjC to JS" responseCallback:^(id response) {
-        NSLog(@"sendMessage got response: %@", response);
-    }];
-}
--(IBAction)sendEvent:(id)sender {
-    [bridge send:@"testJavascriptHandler" data:@{ @"greetingFromObjC": @"Hi there, JS!" } responseCallback:^(id response) {
-        NSLog(@"testJavascriptHandler responded: %@", response);
-    }];
+-(void)webViewDidFinishLoad:(UIWebView *)webView {
+    if(jsbWebView.hidden == YES) {
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.0); //??? Open after 0 second loading is completed to avoid flicker
+        dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+            jsbWebView.hidden = NO;
+        });
+    }
 }
 
--(void)loadExamplePage:(UIWebView*)webView {
+-(void)loadIndexFile {
     NSString* htmlPath = [[NSBundle mainBundle] pathForResource:@"index" ofType:@"html"];
     NSString* appHtml = [NSString stringWithContentsOfFile:htmlPath encoding:NSUTF8StringEncoding error:nil];
     NSURL *baseURL = [NSURL fileURLWithPath:htmlPath];
-    [webView loadHTMLString:appHtml baseURL:baseURL];
+    [NSHTTPCookieStorage sharedHTTPCookieStorage].cookieAcceptPolicy = NSHTTPCookieAcceptPolicyAlways;
+    [jsbWebView loadHTMLString:appHtml baseURL:baseURL];
 }
 
-- (void)viewDidLoad {
+-(void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    jsbWebView = [[UIWebView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+    jsbWebView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin |
+                                  UIViewAutoresizingFlexibleTopMargin |
+                                  UIViewAutoresizingFlexibleRightMargin |
+                                  UIViewAutoresizingFlexibleLeftMargin |
+                                  UIViewAutoresizingFlexibleHeight |
+                                  UIViewAutoresizingFlexibleWidth;
+    jsbWebView.hidden = YES;
+    jsbWebView.scrollView.bounces = NO;
+    [self.view addSubview:jsbWebView];
     
-    bridge = [[JSBridge alloc]initWithWebView:jsbWebView webViewDelegate:nil bundle:nil handler:^(id data, JSBResponseCallback responseCallback) {
-        NSLog(@"ObjC received message from JS: %@", data);
+    bridge = [[JSBridge alloc]initWithWebView:jsbWebView webViewDelegate:self bundle:nil handler:^(id data, JSBResponseCallback responseCallback) {
+        JSBLog(@"ObjC received message from JS after initialization: %@", data);
         responseCallback(@"Response for message from ObjC");
     }];
-    
     [bridge registerEvent:@"testObjcCallback" handler:^(id data, JSBResponseCallback responseCallback) {
-        NSLog(@"testObjcCallback called: %@", data);
+        JSBLog(@"testObjcCallback called: %@", data);
         responseCallback(@"Response from testObjcCallback");
     }];
     
     [bridge send:nil data:@"A string sent from ObjC before Webview has loaded." responseCallback:^(id responseData) {
-        NSLog(@"objc got response! %@", responseData);
+        JSBLog(@"objc got response! %@", responseData);
     }];
     
     [bridge send:@"testJavascriptHandler" data:@{ @"foo":@"before ready" } responseCallback:nil];
     
-    [self loadExamplePage:jsbWebView];
+    [self loadIndexFile];
     
-    [bridge send:nil data:@"A string sent from ObjC after Webview has loaded." responseCallback:nil];
-    
-    [bridge registerJavaScriptAPI:[[TestAPIOne alloc]initWithWebView:jsbWebView]];
+    [bridge send:nil data:@"A string sent from ObjC after Webview has loaded." responseCallback:nil];    
 }
 
-- (void)didReceiveMemoryWarning {
+-(void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }

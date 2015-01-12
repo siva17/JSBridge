@@ -1,5 +1,5 @@
 //
-//  JSBridgeAPIBase.m
+//  JSBridgeBase.m
 //  JSBridge
 //
 //  Created by Siva RamaKrishna Ravuri
@@ -27,16 +27,32 @@
 //
 //
 
-#import "JSBridgeAPIBase.h"
+#import "JSBridgeBase.h"
 
-@implementation JSBridgeAPIBase
+@implementation JSBridgeBase
 
--(id)initWithWebView:(UIWebView *)webView {
-    self = [super init];
-    if(self) self.jsbWebView = webView;
-    return self;
+-(void)initialize {
+    RELEASE_MEM(self.jsBridge);
+    RELEASE_MEM(self.jsbWebView);
 }
 
+-(void)dealloc {
+    [self initialize];
+#if __has_feature(objc_arc)
+#else
+    [super dealloc];
+#endif
+}
+
+-(id)initWithBridge:(JSBridge *)bridge webView:(UIWebView *)webView {
+    self = [super init];
+    if(self) {
+        [self initialize];
+        self.jsBridge   = bridge;
+        self.jsbWebView = webView;
+    }
+    return self;
+}
 -(void)callCallback:(NSDictionary *)config {
     if(config) {
         NSString *callbackID = [config objectForKey:@"callbackID"];
