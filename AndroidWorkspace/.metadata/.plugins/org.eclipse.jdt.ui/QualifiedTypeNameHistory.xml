@@ -4,9 +4,10 @@
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.example.TestAPIOne"/>
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridgeHandler"/>
 <fullyQualifiedTypeName name="android.support.v7.appcompat.R"/>
-<fullyQualifiedTypeName name="com.siva4u.jsbridge.R"/>
-<fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridge"/>
 <fullyQualifiedTypeName name="org.json.JSONObject"/>
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridgeCallback"/>
 <fullyQualifiedTypeName name="android.R"/>
+<fullyQualifiedTypeName name="com.siva4u.jsbridge.R"/>
+<fullyQualifiedTypeName name="android.webkit.CookieManager"/>
+<fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridge"/>
 </qualifiedTypeNameHistroy>
