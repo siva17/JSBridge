@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;com.siva4u.jsbridge.example.TestAPIOne&apos; to &apos;Test&apos;&#x0A;- Original project: &apos;JSBridge&apos;&#x0A;- Original element: &apos;com.siva4u.jsbridge.example.TestAPIOne&apos;&#x0A;- Renamed element: &apos;com.siva4u.jsbridge.example.Test&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;TestAPIOne&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;com.siva4u.jsbridge.example{TestAPIOne.java[TestAPIOne" matchStrategy="1" name="Test" qualified="false" references="true" similarDeclarations="false" stamp="1421715932606" textual="false" version="1.0"/>
+</session>

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="android.webkit.WebView"/>
-<fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridge"/>
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.example.TestAPIOne"/>
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridgeHandler"/>
 <fullyQualifiedTypeName name="android.support.v7.appcompat.R"/>
 <fullyQualifiedTypeName name="com.siva4u.jsbridge.R"/>
+<fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridge"/>
+<fullyQualifiedTypeName name="org.json.JSONObject"/>
+<fullyQualifiedTypeName name="com.siva4u.jsbridge.JSBridgeCallback"/>
+<fullyQualifiedTypeName name="android.R"/>
 </qualifiedTypeNameHistroy>

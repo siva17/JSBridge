@@ -28,15 +28,17 @@
 //
 
 ;(function(w,doc) {
-	if(w.JSBridge)return;
+    if(w.JSBridge)return;
 
 // PRIVATE VARIABLES
-	//!!! WARNING - Should be in SYNC with Native Code defines - Begin
-	var JSBRIDGE_URL_SCHEME  = 'jsbridgeurlscheme';
-	var JSBRIDGE_URL_MESSAGE = '__JSB_URL_MESSAGE__';
-	var JSBRIDGE_URL_PARAM   = '__JSB_PARAM_NONE__';
-	//!!! WARNING - Should be in SYNC with Native Code defines - End
-
+    //!!! WARNING - Should be in SYNC with Native Code defines - Begin
+    var JSBRIDGE_URL_SCHEME  = 'jsbridgeurlscheme';
+    var JSBRIDGE_URL_MESSAGE = '__JSB_URL_MESSAGE__';
+    var JSBRIDGE_URL_EVENT   = '__JSB_URL_EVENT__';
+    var JSBRIDGE_URL_API     = '__JSB_URL_API__';
+  
+    //!!! WARNING - Should be in SYNC with Native Code defines - End
+  
     var ua                  = navigator.userAgent;
     var isIOSDevice         = /iP(hone|od|ad)/g.test(ua);
     var isAndroidDevice     = /Android/g.test(ua);
@@ -44,10 +46,11 @@
     var receiveMessageQueue = [];
     var messageHandlers     = {};
     var responseCallbacks   = {};
+    var apiData             = null;
     var uniqueId            = 1;
     var messagingIframe;
 
-    // PRIVATE METHODS
+// PRIVATE METHODS
 
     function JSBridgeLog() {
         if (typeof console != 'undefined') {
@@ -61,16 +64,15 @@
     }
 
     function getIFrameSrc(param) {
-        return JSBRIDGE_URL_SCHEME + '://' + JSBRIDGE_URL_MESSAGE + '/'+ ((param)?(param):(JSBRIDGE_URL_PARAM));
+        return JSBRIDGE_URL_SCHEME + '://' + JSBRIDGE_URL_MESSAGE + '/'+ param;
     }
 
     function callObjCAPI(name,data) {
-
-        var methodDetails = name.split('.');
-
         // Should not called triggerNativeCall as iFrame needs to be deleted in order to get the retvalue.
         var iframe = document.createElement("IFRAME");
-        iframe.setAttribute("src", getIFrameSrc(methodDetails[0] + "&" + encodeURIComponent(methodDetails[1]) + "&" + data));
+        apiData = {api:name};
+        if(data) apiData["data"] = data;
+        iframe.setAttribute("src", getIFrameSrc(JSBRIDGE_URL_API));
         document.documentElement.appendChild(iframe);
         iframe.parentNode.removeChild(iframe);
         iframe = null;
@@ -82,12 +84,12 @@
 
     function triggerNativeCall() {
         if(isIOSDevice) {
-            messagingIframe.src = getIFrameSrc();
+            messagingIframe.src = getIFrameSrc(JSBRIDGE_URL_EVENT);
         } else {
-            var apiName = ((isAndroidDevice)?("AndroidAPI.NativeAPI"):("WebAppAPI.NativeAPI"));
+            var apiName = ((isAndroidDevice)?("AndroidAPI.ProcessJSEventQueue"):("WebAppAPI.ProcessJSEventQueue"));
             try {
                 var api = eval(apiName);
-                if(api) api(_fetchJSQueue());
+                if(api) api(_fetchJSEventQueue());
             } catch(e) {}
         }
     }
@@ -120,10 +122,12 @@
                         doSend({responseId:callbackResponseId, responseData:responseData});
                     }
                 }
-
+                
                 try {
                     var handler = ((message.eventName)?(messageHandlers[message.eventName]):(JSBridge.bridgeHandler));
-                    handler(message.data, responseCallback);
+                    if(handler) {
+                    	handler(message.data, responseCallback);
+                    }
                 } catch(e) {
                     JSBridgeLogException(e,"dispatchMessageFromNative");
                 }
@@ -131,7 +135,7 @@
         });
     }
 
-    // PUBLIC METHODS
+// PUBLIC METHODS
     function init(bridgeHandler) {
         if(JSBridge.bridgeHandler){JSBridgeLogException(e,"init");}
         JSBridge.bridgeHandler  = bridgeHandler;
@@ -171,31 +175,29 @@
             }
 
             if(isIOSDevice) {
-                if(data) {
-                    data = encodeURIComponent(data);
-                    name += ":";
-                }
+                if(data) name += ":";
                 return callObjCAPI(name,data);
-            }
-            var api = eval(name);
-            if(api) {
-                if(data) return api(data);
-                return api();
             } else {
-                JSBridgeLogException("Unsupported API:",name);
-            }
+                var api = eval((isAndroidDevice)?("AndroidAPI.ProcessJSAPIRequest"):("WebAppAPI.ProcessJSAPIRequest"));
+                if(api) {
+                	if(data) return api(name,data);
+                	return api(name,null);
+                } else {
+	                JSBridgeLogException("Unsupported API:",name);
+                }
+			}
         } catch(e) {
             JSBridgeLogException(e,"Invalid API:"+name);
         }
     }
-
-    function _fetchJSQueue() {
+  
+    function _fetchJSEventQueue() {
         try {
             var messageQueueString = JSON.stringify(sendMessageQueue);
             sendMessageQueue = [];
             return messageQueueString;
         } catch(e) {
-            JSBridgeLogException(e,"_fetchJSQueue");
+            JSBridgeLogException(e,"_fetchJSEventQueue");
         }
         return [];
     }
@@ -208,6 +210,8 @@
         }
     }
 
+    function _getAPIData() { return JSON.stringify(apiData); }
+  
     function _invokeJSCallback(cbID,removeAfterExecute,config) {
         if(cbID) {
             var cb = responseCallbacks[cbID];
@@ -223,17 +227,17 @@
         }
     };
 
-    w.JSBridge = {
-        init    : init,
+	w.JSBridge = {
+		init    : init,
+		send    : send,
         callAPI : callAPI,
-        send    : send,
-
-        registerEvent   : registerEvent,
+  
+		registerEvent   : registerEvent,
         deRegisterEvent : deRegisterEvent,
-
-        _fetchJSQueue           : _fetchJSQueue,
-        _handleMessageFromNative: _handleMessageFromNative,
-
+  
+		_fetchJSEventQueue      : _fetchJSEventQueue,
+		_handleMessageFromNative: _handleMessageFromNative,
+        _getAPIData             : _getAPIData,
         _invokeJSCallback       : _invokeJSCallback,
     }
 

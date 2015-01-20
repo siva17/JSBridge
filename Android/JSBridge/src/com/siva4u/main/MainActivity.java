@@ -1,108 +1,44 @@
 package com.siva4u.main;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
-import android.widget.Button;
 
 import com.siva4u.jsbridge.R;
 import com.siva4u.jsbridge.JSBridge;
 import com.siva4u.jsbridge.JSBridgeCallback;
 import com.siva4u.jsbridge.JSBridgeHandler;
-import com.siva4u.jsbridge.example.TestAPIOne;
 
-public class MainActivity extends Activity implements JSBridgeHandler {
+public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-		final WebView webview = (WebView) findViewById(R.id.JSBridgeWebView);
-		final JSBridge thisBridge = new JSBridge(this, getApplicationContext(), webview);
-		
-		thisBridge.registerJavaScriptAPI(new TestAPIOne(getApplicationContext(), webview));
-		
-		thisBridge.registerEvent("testObjcCallback", new JSBridgeHandler(){
+
+        final WebView webview = (WebView) findViewById(R.id.JSBridgeWebView);
+        final JSBridge jsBridge = new JSBridge(getApplicationContext(), webview);
+        jsBridge.init(this, new JSBridgeHandler() {
 			@Override
 			public void hanlder(JSONObject data, JSBridgeCallback responseCallback) {
-				System.out.println("JSBridgeWebViewApp: MainActivity: HandlerTestObjcCallback: "+data);
-				try {
-					responseCallback.callBack(new JSONObject("{'data':'Response from testObjcCallback'}"));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}			
+				JSBridge.Log("MainActivity","JSBridgeHandler",data+" with CB:"+responseCallback);
+				responseCallback.callBack(JSBridge.putKeyValue(null, "initData","Response for message from Native for UN-SUPPORTED API"));
 			}
 		});
-		
-		JSONObject data = null;
-		try {
-			data = new JSONObject("{'data':'A string sent from ObjC before Webview has loaded.'}");
-		} catch (JSONException e) {}
-		
-		thisBridge.send(null, data, new JSBridgeCallback(){
+
+		jsBridge.send(null,JSBridge.putKeyValue(null, "thoseData", "A string sent from Native before Webview has loaded."), new JSBridgeCallback(){
 			@Override
 			public void callBack(JSONObject data) {
-				System.out.println("JSBridgeWebViewApp: MainActivity: CallbackSendMessage1: "+data);				
+				JSBridge.Log("MainActivity", "CallbackSendMessage", data.toString());
 			}
 		});
+				
+		jsBridge.send("testJavascriptHandler",JSBridge.putKeyValue(null, "foo", "Before Ready"),null);
 		
-		try {
-			data = new JSONObject("{'foo':'before ready'}");
-		} catch (JSONException e) {}
-		thisBridge.send("testJavascriptHandler",data,null);
+		jsBridge.loadHTML("file:///android_asset/index.html");
 		
-		thisBridge.loadHTML("file:///android_asset/index.html");
-		
-		try {
-			data = new JSONObject("{'data':'A string sent from ObjC after Webview has loaded.'}");
-		} catch (JSONException e) {}
-		thisBridge.send(null, data, null);
-		
-		final Button btnSendMsg = (Button) findViewById(R.id.btnSendMessage);
-		btnSendMsg.setOnClickListener(new View.OnClickListener() {			
-			@Override
-			public void onClick(View v) {
-				JSONObject data = null;
-				try {
-					data = new JSONObject("{'data':'A string sent from ObjC to JS'}");
-				} catch (JSONException e) {}
-				thisBridge.send(null,data,new JSBridgeCallback() {
-					@Override
-					public void callBack(JSONObject data) {
-						System.out.println("JSBridgeWebViewApp: MainActivity: sendMessage got response: "+data);				
-					}
-				});
-			}
-		});
-		final Button btnSendEvent = (Button) findViewById(R.id.btnSendEvent);
-		btnSendEvent.setOnClickListener(new View.OnClickListener() {			
-			@Override
-			public void onClick(View v) {
-				JSONObject data = null;
-				try {
-					data = new JSONObject("{'greetingFromObjC':'Hi there, JS!'}");
-				} catch (JSONException e) {}
-				thisBridge.send("testJavascriptHandler",data,new JSBridgeCallback() {
-					@Override
-					public void callBack(JSONObject data) {
-						System.out.println("JSBridgeWebViewApp: MainActivity: testJavascriptHandler responded: "+data);				
-					}
-				});
-			}
-		});		
-    }
-    
-	@Override
-	public void hanlder(JSONObject data, JSBridgeCallback responseCallback) {
-		System.out.println("JSBridgeWebViewApp: MainActivity: hanlder: START:\n"+data);
-		try {
-			responseCallback.callBack(new JSONObject("{'data':'Response for message from ObjC'}"));
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-	}
+		jsBridge.send(null, JSBridge.putKeyValue(null, "thisData", "A string sent from ObjC after Webview has loaded."), null);
+    }    
 }

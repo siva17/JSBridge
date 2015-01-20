@@ -1,8 +1,0 @@
-package com.jpmchase.hybrid.jsbridge;
-
-import org.json.JSONObject;
-
-public interface JSBridgeHandler {
-	public void hanlder(JSONObject data, JSBridgeCallback responseCallback);
-
-}
