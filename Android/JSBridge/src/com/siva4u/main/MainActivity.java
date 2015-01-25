@@ -27,18 +27,6 @@ public class MainActivity extends Activity {
 				JSBridge.callEventCallback(responseCallback, JSBridge.putKeyValue(null, "initData","Response for message from Native for UN-SUPPORTED API"));
 			}
 		});
-
-		jsBridge.send(null,JSBridge.putKeyValue(null, "thoseData", "A string sent from Native before Webview has loaded."), new JSBridgeCallback(){
-			@Override
-			public void callBack(JSONObject data) {
-				JSBridge.Log("MainActivity", "CallbackSendMessage", data.toString());
-			}
-		});
-				
-		jsBridge.send("testJavascriptHandler",JSBridge.putKeyValue(null, "foo", "Before Ready"),null);
-		
-		jsBridge.loadHTML("file:///android_asset/index.html");
-		
-		jsBridge.send(null, JSBridge.putKeyValue(null, "thisData", "A string sent from ObjC after Webview has loaded."), null);
+		jsBridge.loadHTML("https://acceptance.dot.state.wi.us/regRenewal/");		
     }    
 }

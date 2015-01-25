@@ -14,8 +14,6 @@
 		84CFB0D51A5A188700DF2269 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0D41A5A188700DF2269 /* Images.xcassets */; };
 		84CFB0D81A5A188700DF2269 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0D61A5A188700DF2269 /* LaunchScreen.xib */; };
 		84CFB0E41A5A188700DF2269 /* JSBridgeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0E31A5A188700DF2269 /* JSBridgeTests.m */; };
-		84CFB0F11A5A1A0800DF2269 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0EE1A5A1A0800DF2269 /* index.html */; };
-		84CFB0F21A5A1A0800DF2269 /* Test.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F01A5A1A0800DF2269 /* Test.m */; };
 		84CFB0FA1A5A1A1000DF2269 /* JSBridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 84CFB0F61A5A1A1000DF2269 /* JSBridge.js */; };
 		84CFB0FB1A5A1A1000DF2269 /* JSBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F71A5A1A1000DF2269 /* JSBridge.m */; };
 		84CFB0FC1A5A1A1000DF2269 /* JSBridgeBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 84CFB0F91A5A1A1000DF2269 /* JSBridgeBase.m */; };
@@ -45,9 +43,6 @@
 		84CFB0DD1A5A188700DF2269 /* JSBridgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JSBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		84CFB0E21A5A188700DF2269 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		84CFB0E31A5A188700DF2269 /* JSBridgeTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSBridgeTests.m; sourceTree = "<group>"; };
-		84CFB0EE1A5A1A0800DF2269 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
-		84CFB0EF1A5A1A0800DF2269 /* Test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Test.h; sourceTree = "<group>"; };
-		84CFB0F01A5A1A0800DF2269 /* Test.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Test.m; sourceTree = "<group>"; };
 		84CFB0F41A5A1A1000DF2269 /* JSBInclude.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBInclude.h; sourceTree = "<group>"; };
 		84CFB0F51A5A1A1000DF2269 /* JSBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBridge.h; sourceTree = "<group>"; };
 		84CFB0F61A5A1A1000DF2269 /* JSBridge.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = JSBridge.js; sourceTree = "<group>"; };
@@ -95,7 +90,6 @@
 		84CFB0C61A5A188700DF2269 /* JSBridge */ = {
 			isa = PBXGroup;
 			children = (
-				84CFB0ED1A5A1A0800DF2269 /* Example */,
 				84CFB0F31A5A1A1000DF2269 /* JSBridge */,
 				84CFB0CB1A5A188700DF2269 /* AppDelegate.h */,
 				84CFB0CC1A5A188700DF2269 /* AppDelegate.m */,
@@ -133,16 +127,6 @@
 				84CFB0E21A5A188700DF2269 /* Info.plist */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		84CFB0ED1A5A1A0800DF2269 /* Example */ = {
-			isa = PBXGroup;
-			children = (
-				84CFB0EE1A5A1A0800DF2269 /* index.html */,
-				84CFB0EF1A5A1A0800DF2269 /* Test.h */,
-				84CFB0F01A5A1A0800DF2269 /* Test.m */,
-			);
-			path = Example;
 			sourceTree = "<group>";
 		};
 		84CFB0F31A5A1A1000DF2269 /* JSBridge */ = {
@@ -239,7 +223,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				84CFB0D31A5A188700DF2269 /* Main.storyboard in Resources */,
-				84CFB0F11A5A1A0800DF2269 /* index.html in Resources */,
 				84CFB0D81A5A188700DF2269 /* LaunchScreen.xib in Resources */,
 				84CFB0FA1A5A1A1000DF2269 /* JSBridge.js in Resources */,
 				84CFB0D51A5A188700DF2269 /* Images.xcassets in Resources */,
@@ -265,7 +248,6 @@
 				84CFB0FB1A5A1A1000DF2269 /* JSBridge.m in Sources */,
 				84CFB0FC1A5A1A1000DF2269 /* JSBridgeBase.m in Sources */,
 				84CFB0CA1A5A188700DF2269 /* main.m in Sources */,
-				84CFB0F21A5A1A0800DF2269 /* Test.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

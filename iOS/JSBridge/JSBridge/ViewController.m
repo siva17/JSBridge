@@ -41,20 +41,6 @@ static JSBridge *singleTonBridge = nil;
 @synthesize jsbWebView;
 @synthesize bridge;
 
--(IBAction)reloadWebView:(id)sender {
-    [jsbWebView reload];
-}
--(IBAction)sendMessage:(id)sender {
-    [bridge send:nil data:@"A string sent from ObjC to JS" responseCallback:^(id response) {
-        NSLog(@"sendMessage got response: %@", response);
-    }];
-}
--(IBAction)sendEvent:(id)sender {
-    [bridge send:@"testJavascriptHandler" data:@{ @"greetingFromObjC": @"Hi there, JS!" } responseCallback:^(id response) {
-        NSLog(@"testJavascriptHandler responded: %@", response);
-    }];
-}
-
 -(void)webViewDidFinishLoad:(UIWebView *)webView {
     if(jsbWebView.hidden == YES) {
         dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.0); //??? Open after 0 second loading is completed to avoid flicker
@@ -92,21 +78,8 @@ static JSBridge *singleTonBridge = nil;
     }];
     
     singleTonBridge = bridge;
-    
-    [bridge registerEvent:@"testObjcCallback" handler:^(id data, JSBResponseCallback responseCallback) {
-        JSBLog(@"testObjcCallback called: %@", data);
-        [JSBridge callEventCallback:responseCallback data:@"Response from testObjcCallback"];
-    }];
-    
-    [bridge send:nil data:@"A string sent from ObjC before Webview has loaded." responseCallback:^(id responseData) {
-        JSBLog(@"objc got response! %@", responseData);
-    }];
-    
-    [bridge send:@"testJavascriptHandler" data:@{ @"foo":@"before ready" } responseCallback:nil];
-    
-    [self loadIndexFile];
-    
-    [bridge send:nil data:@"A string sent from ObjC after Webview has loaded." responseCallback:nil];    
+        
+    [jsbWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://acceptance.dot.state.wi.us/regRenewal/"]]];
 }
 
 +(JSBridge *)getJSBridgeInstance {
