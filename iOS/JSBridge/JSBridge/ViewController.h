@@ -28,7 +28,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "JSBridge.h"
 
 @interface ViewController : UIViewController <UIWebViewDelegate>
++(JSBridge *)getJSBridgeInstance;
 @end
 

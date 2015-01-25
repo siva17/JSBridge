@@ -32,8 +32,8 @@
 @implementation JSBridgeBase
 
 -(void)initialize {
-    RELEASE_MEM(self.jsBridge);
-    RELEASE_MEM(self.jsbWebView);
+    self.jsBridge   = nil;
+    self.jsbWebView = nil;
 }
 
 -(void)dealloc {
@@ -44,7 +44,7 @@
 #endif
 }
 
--(id)initWithBridge:(JSBridge *)bridge webView:(UIWebView *)webView {
+-(id)initWithJSBridge:(JSBridge *)bridge webView:(UIWebView *)webView {
     self = [super init];
     if(self) {
         [self initialize];
@@ -52,19 +52,6 @@
         self.jsbWebView = webView;
     }
     return self;
-}
--(void)callCallback:(NSDictionary *)config {
-    if(config) {
-        NSString *callbackID = [config objectForKey:@"callbackID"];
-        if(callbackID) {
-            NSString *removeAfterExecute = [config objectForKey:@"removeAfterExecute"];
-            if(!removeAfterExecute) removeAfterExecute = @"true";
-            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:config options:0 error:nil];
-            NSString *jsonString = [[NSString alloc] initWithBytes:[jsonData bytes] length:[jsonData length] encoding:NSUTF8StringEncoding];
-            NSString* jsAPIToExecute = [NSString stringWithFormat:@"JSBridge._invokeJSCallback(\"%@\", %@, %@);",callbackID,removeAfterExecute,jsonString];
-            [self.jsbWebView stringByEvaluatingJavaScriptFromString:jsAPIToExecute];
-        }
-    }
 }
 
 @end

@@ -32,6 +32,5 @@
 @interface JSBridgeBase : NSObject
 @property(nonatomic,assign) JSBridge  *jsBridge;
 @property(nonatomic,assign) UIWebView *jsbWebView;
--(id)initWithBridge:(JSBridge *)bridge webView:(UIWebView *)webView;
--(void)callCallback:(NSDictionary *)config;
+-(id)initWithJSBridge:(JSBridge *)bridge webView:(UIWebView *)webView;
 @end

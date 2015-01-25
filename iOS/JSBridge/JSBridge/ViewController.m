@@ -28,7 +28,8 @@
 //
 
 #import "ViewController.h"
-#import "JSBridge.h"
+
+static JSBridge *singleTonBridge = nil;
 
 @interface ViewController ()
 @property(nonatomic,retain) UIWebView   *jsbWebView;
@@ -39,6 +40,20 @@
 
 @synthesize jsbWebView;
 @synthesize bridge;
+
+-(IBAction)reloadWebView:(id)sender {
+    [jsbWebView reload];
+}
+-(IBAction)sendMessage:(id)sender {
+    [bridge send:nil data:@"A string sent from ObjC to JS" responseCallback:^(id response) {
+        NSLog(@"sendMessage got response: %@", response);
+    }];
+}
+-(IBAction)sendEvent:(id)sender {
+    [bridge send:@"testJavascriptHandler" data:@{ @"greetingFromObjC": @"Hi there, JS!" } responseCallback:^(id response) {
+        NSLog(@"testJavascriptHandler responded: %@", response);
+    }];
+}
 
 -(void)webViewDidFinishLoad:(UIWebView *)webView {
     if(jsbWebView.hidden == YES) {
@@ -73,11 +88,14 @@
     
     bridge = [[JSBridge alloc]initWithWebView:jsbWebView webViewDelegate:self bundle:nil handler:^(id data, JSBResponseCallback responseCallback) {
         JSBLog(@"ObjC received message from JS after initialization: %@", data);
-        responseCallback(@"Response for message from ObjC");
+        [JSBridge callEventCallback:responseCallback data:@"Response for message from ObjC"];
     }];
+    
+    singleTonBridge = bridge;
+    
     [bridge registerEvent:@"testObjcCallback" handler:^(id data, JSBResponseCallback responseCallback) {
         JSBLog(@"testObjcCallback called: %@", data);
-        responseCallback(@"Response from testObjcCallback");
+        [JSBridge callEventCallback:responseCallback data:@"Response from testObjcCallback"];
     }];
     
     [bridge send:nil data:@"A string sent from ObjC before Webview has loaded." responseCallback:^(id responseData) {
@@ -89,6 +107,10 @@
     [self loadIndexFile];
     
     [bridge send:nil data:@"A string sent from ObjC after Webview has loaded." responseCallback:nil];    
+}
+
++(JSBridge *)getJSBridgeInstance {
+    return singleTonBridge;
 }
 
 -(void)didReceiveMemoryWarning {

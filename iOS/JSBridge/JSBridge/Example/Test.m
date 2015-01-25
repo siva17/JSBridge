@@ -91,7 +91,7 @@
 -(NSString *)JSBAPI_APIThree:(NSDictionary *)config {
     JSBLog(@"Called APIThree. Function with Config Parameter and has string return value");
     JSBLog(@"Config : %@",config);
-    return @"Success of APIThree";
+    return @"Returned data from APIThree";
 }
 
 -(void)JSBAPI_APIFour:(NSDictionary *)config {
@@ -99,14 +99,14 @@
     JSBLog(@"Config : %@",config);
     NSMutableDictionary *returnConfig = [[NSMutableDictionary alloc]initWithDictionary:config];
     [returnConfig setObject:@"Returned Value" forKey:@"returned"];
-    [self callCallback:returnConfig];
+    [JSBridge callCallbackForWebView:self.jsbWebView inJSON:config outJSON:[JSBridge putKeyValue:nil key:@"callBackData" value:@"Success from APIFour"]];
 }
 
 -(NSString *)JSBAPI_APIFive:(NSDictionary *)config {
     JSBLog(@"Called APIFive. Function with Config Parameter with call back and has string return value");
     JSBLog(@"Config : %@",config);
-    [self callCallback:config];
-    return @"Success Of APIFive";
+    [JSBridge callCallbackForWebView:self.jsbWebView inJSON:config outJSON:[JSBridge putKeyValue:nil key:@"callBackData" value:@"Success from APIFive"]];
+    return @"Returned data from APIFive";
 }
 
 -(void)JSBAPI_APISix:(NSDictionary *)config {
@@ -121,7 +121,7 @@
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self callCallback:config];
+            [JSBridge callCallbackForWebView:self.jsbWebView inJSON:config outJSON:[JSBridge putKeyValue:nil key:@"callBackData" value:@"Success from APISix"]];
             JSBLog(@"End of the Process");
         });
     });
@@ -140,13 +140,18 @@
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self callCallback:config];
+            [JSBridge callCallbackForWebView:self.jsbWebView inJSON:config outJSON:[JSBridge putKeyValue:nil key:@"callBackData" value:@"Success from APISeven"]];
             JSBLog(@"End of the Process");
         });
     });
     
     JSBLog(@"Returned Value");
-    return @"Success Of APISeven";
+    return @"Returned data from APISeven";
+}
+
+-(void)JSBEvent_testNativeEvent:(NSDictionary *)data responseCallback:(JSBResponseCallback)responseCallback {
+    JSBLog(@"TestAPIOne.testNativeEvent called with data:%@ and responceCallback:%@",data,responseCallback);
+    [JSBridge callEventCallback:responseCallback data:@"Response from TestAPIOne.testNativeEvent"];
 }
 
 @end

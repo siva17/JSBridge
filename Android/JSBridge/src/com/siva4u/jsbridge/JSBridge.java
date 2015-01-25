@@ -22,10 +22,10 @@ import android.webkit.WebViewClient;
 @SuppressLint({ "NewApi", "SetJavaScriptEnabled", "JavascriptInterface", "SdCardPath" })
 public class JSBridge {
 
-    public static final String JS_BRIDGE_FILE_NAME			= "JSBridge.min.js";
+    public static final String JS_BRIDGE_FILE_NAME			= "JSBridge.js";
     public static final String JS_BRIDGE					= "JSBridge";
     public static final String JS_BRIDGE_SEND_NATIVE_QUEUE	= "_handleMessageFromNative";
-    public static final String JS_API_BASE_PACKAGE			= "com.siva4u.jsbridge.example.";
+    public static final String JS_API_BASE_PACKAGE			= "com.siva4u.example.";
     public static final String JS_API_PREFIX_FOR_API		= "JSBAPI_";
     public static final String JS_API_PREFIX_FOR_EVENT		= "JSBEvent_";
 
@@ -49,9 +49,7 @@ public class JSBridge {
 	            if(forKey != null) return obj.get(forKey).toString();
 	            else return obj.toString();
         	}
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
         return null;
     }
     public static String getString(JSONObject obj) {
@@ -63,9 +61,7 @@ public class JSBridge {
     		try {
     			if(obj == null) obj = new JSONObject();
 				obj.put(key, value);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+			} catch (JSONException e) {}
     	}
     	return obj;
     }
@@ -74,9 +70,7 @@ public class JSBridge {
     		try {
     			if(obj == null) obj = new JSONObject();
 				obj.put(key, value);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+			} catch (JSONException e) {}
     	}
     	return obj;
     }
@@ -85,119 +79,102 @@ public class JSBridge {
     		try {
     			if(obj == null) obj = new JSONObject();
 				obj.put(key, value);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+			} catch (JSONException e) {}
     	}
     	return obj;
     }
     public static JSONObject getJSONObject(String str) {
         try {
         	if(str != null) return new JSONObject(str);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
         return null;
     }
     public static JSONObject getJSONObjectForKey(JSONObject obj, String key) {
-    	if((obj == null) || (key == null)) return null;
-    	
     	try {
-    		return obj.getJSONObject(key);
-        } catch (JSONException e) {
-            e.printStackTrace();
-    		String dataStr = getString(obj,key);
-    		if(dataStr != null) {
-				try {
-					return new JSONObject("{'data':'"+dataStr+"'}");
-				} catch (JSONException e1) {
-					e1.printStackTrace();
-				}
-    		}
-        }
+    		if((obj != null) && (key != null)) return obj.getJSONObject(key);
+        } catch (JSONException e) {}
     	return null;
     }
     public static Object getObjectFromJSONObject(JSONObject obj, String key) {
     	if((obj == null) || (key == null)) return null;
     	try {
     		return obj.get(key);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
     	return null;
     }
     public static JSONObject updateJsonObject(JSONObject obj, String key, String value) {
         try {
             if((obj != null) && (key != null) && (value != null)) return obj.put(key,value);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
         return obj;
     }
     public static JSONObject updateJsonObject(JSONObject obj, String key, JSONObject value) {
         try {
             if((obj != null) && (key != null) && (value != null)) return obj.put(key,value);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
         return obj;
     }
     public static JSONObject updateJsonObject(JSONObject obj, String key, Object value) {
         try {
             if((obj != null) && (key != null) && (value != null)) return obj.put(key,value);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
         return obj;
     }
 
-    public static JSONObject getReturnObject(String status, JSONObject inJsonObj) {
-    	JSONObject outJsonObj = new JSONObject();
-    	putKeyValue(outJsonObj, "status", status);
-    	putKeyValue(outJsonObj, "data", ((inJsonObj != null)?(inJsonObj):(new JSONObject())));
-    	return outJsonObj;
-    }
-    public static JSONObject getReturnObject(String status, String inStr) {
-    	JSONObject outJsonObj = new JSONObject();
-    	putKeyValue(outJsonObj, "status", status);
-    	putKeyValue(outJsonObj, "data", ((inStr != null)?(inStr):("null")));
-    	return outJsonObj;
-    }
-    
     public static void callEventCallback(JSBridgeCallback responseCallback, String dataStr) {
     	if(responseCallback != null) {
-    		responseCallback.callBack(getReturnObject("true", dataStr));
+    		responseCallback.callBack(getReturnObject(null, "true", dataStr));
     	}
     }
     public static void callEventCallback(JSBridgeCallback responseCallback, JSONObject dataJson) {
     	if(responseCallback != null) {
-    		responseCallback.callBack(getReturnObject("true", dataJson));
+    		responseCallback.callBack(getReturnObject(null,"true", dataJson));
     	}
     }
-    public static void callEventCallback(JSBridgeCallback responseCallback, String dataStr, String supportStatus) {
-    	if(responseCallback != null) {
-    		responseCallback.callBack(getReturnObject(supportStatus, dataStr));
-    	}
-    }
-    public static void callEventCallback(JSBridgeCallback responseCallback, JSONObject dataJson, String supportStatus) {
-    	if(responseCallback != null) {
-    		responseCallback.callBack(getReturnObject(supportStatus, dataJson));
-    	}
-    }
-
+    
     public static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, JSONObject outJsonObj) {
     	return callAPICallback(wv, inJsonObj, outJsonObj, "true");
     }
     public static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, String outJsonStr) {
     	return callAPICallback(wv, inJsonObj, outJsonStr, "true");
+    }    
+
+    private final String getAssetFileContents(String fileName) {
+        String contents = "";
+        try {
+            InputStream stream = context.getAssets().open(fileName);
+            byte[] buffer = new byte[stream.available()];
+            stream.read(buffer);
+            stream.close();
+            contents = new String(buffer);
+        } catch (IOException e) {}
+        return contents;
     }
-    public static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, String outJsonObj, String supportStatus) {
-    	return callAPICallbackComplete(wv, inJsonObj, JSBridge.getReturnObject(supportStatus, outJsonObj));
+    private static JSONObject getReturnObject(String apiName, String status, JSONObject inJsonObj) {
+    	JSONObject outJsonObj = new JSONObject();
+    	putKeyValue(outJsonObj, "status", status);
+    	if(apiName != null) putKeyValue(outJsonObj, "apiName", apiName);
+    	if(inJsonObj != null) putKeyValue(outJsonObj, "data", inJsonObj);
+    	return outJsonObj;
     }
-    public static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, JSONObject outJsonObj, String supportStatus) {
-    	return callAPICallbackComplete(wv, inJsonObj, JSBridge.getReturnObject(supportStatus, outJsonObj));
+    private static JSONObject getReturnObject(String apiName, String status, String inStr) {
+    	JSONObject outJsonObj = new JSONObject();
+    	putKeyValue(outJsonObj, "status", status);
+    	if(apiName != null) putKeyValue(outJsonObj, "apiName", apiName);
+    	if(inStr != null) putKeyValue(outJsonObj, "data", inStr);
+    	return outJsonObj;
+    }    
+    private static void callEventCallback(JSBridgeCallback responseCallback, String dataStr, String supportStatus) {
+    	if(responseCallback != null) {
+    		responseCallback.callBack(getReturnObject(null,supportStatus, dataStr));
+    	}
     }
-    
+    private static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, String outJsonObj, String supportStatus) {
+    	return callAPICallbackComplete(wv, inJsonObj, JSBridge.getReturnObject(null,supportStatus, outJsonObj));
+    }
+    private static JSONObject callAPICallback(final WebView wv, JSONObject inJsonObj, JSONObject outJsonObj, String supportStatus) {
+    	return callAPICallbackComplete(wv, inJsonObj, JSBridge.getReturnObject(null,supportStatus, outJsonObj));
+    }  
     private static JSONObject callAPICallbackComplete(final WebView wv, JSONObject inJsonObj, final JSONObject outJsonObj) {
         final String callbackID = JSBridge.getString(inJsonObj, "callbackID");
         if(callbackID != null) {
@@ -213,26 +190,11 @@ public class JSBridge {
         }
         return outJsonObj;
     }
-
-    private final String getAssetFileContents(String fileName) {
-        String contents = "";
-        try {
-            InputStream stream = context.getAssets().open(fileName);
-            byte[] buffer = new byte[stream.available()];
-            stream.read(buffer);
-            stream.close();
-            contents = new String(buffer);
-        } catch (IOException e) {}
-        return contents;
-    }
-    
     private JSBridgeHandler getMessageHandler(String eventName) {    
 	    if(eventName != null) {
 	    	try {
 		        return (JSBridgeHandler) jsEventNativeHandlers.get(eventName);
-	        } catch (JSONException e) {
-	            e.printStackTrace();
-	        }
+	        } catch (JSONException e) {}
 	    }
 	    return null;
     }
@@ -258,9 +220,7 @@ public class JSBridge {
                     for (int i = 0; i < queueCount; i++) {
                         try {
                             dispatchMessage(startupMessageQueue.getString(i));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        } catch (JSONException e) {}
                     }
                 }
                 startupMessageQueue = null;
@@ -271,14 +231,14 @@ public class JSBridge {
         }
     }
 
-    private class AndroidAPI extends JSBridgeAPIBase {
+    private class AndroidAPI extends JSBridgeBase {
         public AndroidAPI(Context c, WebView view) {
             super(c, view);
         }
 
-        private JSBridgeAPIBase getInstance(String name) {
+        private JSBridgeBase getInstance(String name) {
     		String className = name.split("\\.")[0];        		    		
-    		JSBridgeAPIBase classIntance = (JSBridgeAPIBase) getObjectFromJSONObject(nativeModules,className);    		
+    		JSBridgeBase classIntance = (JSBridgeBase) getObjectFromJSONObject(nativeModules,className);    		
     		if(classIntance == null) {
     			try {
 					Class<?> apiClass = Class.forName(JS_API_BASE_PACKAGE+className);
@@ -288,32 +248,23 @@ public class JSBridge {
 							try {
 								Object instance = cons.newInstance(new Object[] { webViewContext,webView });
 								if(instance != null) {
-									classIntance = (JSBridgeAPIBase) instance;
+									classIntance = (JSBridgeBase) instance;
 									nativeModules.put(className, classIntance);
 								}
 							} catch (InstantiationException e) {
-								e.printStackTrace();
 							} catch (IllegalAccessException e) {
-								e.printStackTrace();
 							} catch (IllegalArgumentException e) {
-								e.printStackTrace();
 							} catch (InvocationTargetException e) {
-								e.printStackTrace();
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
+							} catch (JSONException e) {}
 						}
 					}
 				} catch (NoSuchMethodException e) {
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
+				} catch (ClassNotFoundException e) {}
     		}
         	return classIntance;
         }
         
-        private Method getMethod(JSBridgeAPIBase classIntance, String type, String name, JSONObject data) {
+        private Method getMethod(JSBridgeBase classIntance, String type, String name, JSONObject data) {
 			Method thisMethod = null;
     		try {
 				String methodName = type + name.split("\\.")[1];
@@ -326,9 +277,7 @@ public class JSBridge {
     					thisMethod = classIntance.getClass().getMethod(methodName);
     				}
 				}
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			}
+			} catch (NoSuchMethodException e) {}
     		return thisMethod;
         }
         
@@ -336,7 +285,7 @@ public class JSBridge {
     		JSBridge.Log("JSBridge","invokeMethod", "API:"+name+", data: "+data+" and responseCallback:"+responseCallback);
     		if(name == null) return null;
     		    		
-    		JSBridgeAPIBase classIntance = getInstance(name);
+    		JSBridgeBase classIntance = getInstance(name);
     		if(classIntance != null) {
 				Method thisMethod = getMethod(classIntance, type, name, data);
 				if(thisMethod != null) {
@@ -354,12 +303,8 @@ public class JSBridge {
 						putKeyValue(retVal, "0","TRUE"); 
 						return retVal;
 					} catch (IllegalAccessException e) {
-						e.printStackTrace();
 					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-					}
+					} catch (InvocationTargetException e) {}
 				}
     		}
     		
@@ -368,31 +313,23 @@ public class JSBridge {
         
         private void invokeJSEventHandler(JSONObject message, final JSBridgeCallback responseCallback) {
         	String eventName = getString(message,"eventName");
-        	JSONObject data	 = getJSONObjectForKey(message,"data");            
-        	JSBridge.Log("JSBridge","invokeJSEventHandler","eventName:"+eventName+"\n\tdata:"+data+"\n\tmessage:"+message);
-        	
-        	JSBridgeCallback routedCallBack = new JSBridgeCallback() {
-				@Override
-				public void callBack(JSONObject callBackdata) {
-					JSBridge.Log("JSBridge","invokeJSEventHandler","callBack:"+callBackdata);
-    				callEventCallback(responseCallback,callBackdata);
-				}
-			};
-        	
+        	JSONObject data	 = getJSONObjectForKey(message,"data");
+        	Log("invokeJSEventHandler:eventName:"+eventName+" -> "+message+" -> "+data);
+        	        	
         	if(eventName != null) {
             	JSBridgeHandler handler = null;
         		handler = getMessageHandler(eventName);
         		if(handler != null) {
-        			handler.hanlder(data,routedCallBack);
+        			handler.hanlder(data,responseCallback);
         		} else {        			
-        			JSONObject retVal = invokeMethod(JS_API_PREFIX_FOR_EVENT, eventName, data, routedCallBack);
+        			JSONObject retVal = invokeMethod(JS_API_PREFIX_FOR_EVENT, eventName, data, responseCallback);
         			if(retVal == null) {
         				callEventCallback(responseCallback,"UN-SUPPORTED EVENT: "+eventName,"false");
         			}
                 }            
         	} else {
                 if(jsBridgeHandler != null) {
-                    jsBridgeHandler.hanlder(data,routedCallBack);
+                    jsBridgeHandler.hanlder(data,responseCallback);
                 }
         	}
         }
@@ -403,11 +340,19 @@ public class JSBridge {
         	try {
 	        	JSONObject retVal = invokeMethod(JS_API_PREFIX_FOR_API,name,inJsonObj,null);
 	        	if(retVal != null) {
-	        		return getReturnObject("true", getJSONObjectForKey(retVal, "1")).toString();
+	        		JSONObject dataObj = getJSONObjectForKey(retVal, "1");
+	            	String dataStr = null;
+	            	if(dataObj == null) dataStr = getString(retVal, "1");
+	            	
+	            	JSONObject retObj;
+	            	if(dataObj != null) {
+	            		retObj = getReturnObject(name,"true", dataObj);	
+	            	} else {
+	            		retObj = getReturnObject(name,"true", dataStr);	
+	            	}
+	        		return ((retObj != null)?(retObj.toString()):(null));
 	        	}
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) {}
        		return callAPICallback(webView, inJsonObj, "UN-SUPPORTED API: "+name, "false").toString();
         }
         
@@ -430,9 +375,7 @@ public class JSBridge {
                                             String data = getString(message,"responseData");
                                             responseCallback.callBack(((data != null)?(getJSONObject(data)):(null)));
                                             responseCallbacks.remove(responseId);
-                                        } catch(Exception e) {
-                                            e.printStackTrace();
-                                        }
+                                        } catch(Exception e) {}
                                     }
                                 } else {
                                 	
@@ -455,9 +398,7 @@ public class JSBridge {
                         }
                     }
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            } catch (JSONException e) {}
         }
         @JavascriptInterface
         public void Log(String str) {
@@ -514,7 +455,7 @@ public class JSBridge {
         }
     }
 
-    public void registerJavaScriptAPI(JSBridgeAPIBase instance) {
+    public void registerJavaScriptAPI(JSBridgeBase instance) {
         if(webView != null) {
             webView.addJavascriptInterface(instance, instance.getClass().getSimpleName());
         }
@@ -540,9 +481,7 @@ public class JSBridge {
     public void registerEvent(String eventName, JSBridgeHandler hanlder) {
         try {
             jsEventNativeHandlers.put(eventName, hanlder);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) {}
     }
 
     public void deRegisterEvent(String eventName, JSBridgeHandler hanlder) {

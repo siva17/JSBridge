@@ -1,4 +1,4 @@
-package com.siva4u.jsbridge.example;
+package com.siva4u.example;
 
 import org.json.JSONObject;
 
@@ -7,10 +7,10 @@ import android.webkit.WebView;
 import android.widget.Toast;
 
 import com.siva4u.jsbridge.JSBridge;
-import com.siva4u.jsbridge.JSBridgeAPIBase;
+import com.siva4u.jsbridge.JSBridgeBase;
 import com.siva4u.jsbridge.JSBridgeCallback;
 
-public class Test extends JSBridgeAPIBase {
+public class Test extends JSBridgeBase {
 
 	public Test(Context c, WebView view) {
 		super(c, view);
@@ -62,8 +62,6 @@ public class Test extends JSBridgeAPIBase {
     public void JSBEvent_testNativeEvent(JSONObject jsonObject, JSBridgeCallback responseCallback) {
     	JSBridge.Log("Test","testNativeEvent","START: "+jsonObject);
     	JSBridge.Log("Test","testNativeEvent","responseCallback: "+responseCallback);
-    	if(responseCallback != null) {
-    		responseCallback.callBack(JSBridge.putKeyValue(null, "eventData", "Response is sent from Test.testNativeEvent"));
-    	}
+    	JSBridge.callEventCallback(responseCallback, JSBridge.putKeyValue(null, "eventData", "Response is sent from Test.testNativeEvent"));
     }
 }

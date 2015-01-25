@@ -33,32 +33,37 @@
 #ifndef JSBridge_JSBIncludes_h
 #define JSBridge_JSBIncludes_h
 
+#ifndef RELEASE_MEM
 #if __has_feature(objc_arc)
 #define RELEASE_MEM(ptr) ptr = nil;
 #else
 #define RELEASE_MEM(ptr) if(ptr) [ptr release]; ptr = nil;
 #endif
+#endif
 
 //!!! WARNING - Should be in SYNC with Native Code defines - Begin
-#define JSBRIDGE_URL_SCHEME         @"jsbridgeurlscheme"
-#define JSBRIDGE_URL_MESSAGE        @"__JSB_URL_MESSAGE__"
-#define JSBRIDGE_URL_PARAM          @"__JSB_PARAM_NONE__"
+#define JSBRIDGE_URL_SCHEME             @"jsbridgeurlscheme"
+#define JSBRIDGE_URL_MESSAGE            @"__JSB_URL_MESSAGE__"
+#define JSBRIDGE_URL_EVENT              @"__JSB_URL_EVENT__"
+#define JSBRIDGE_URL_API                @"__JSB_URL_API__"
 //!!! WARNING - Should be in SYNC with Native Code defines - End
-#define JSBRIDGE_URL_REL_PATH       [NSString stringWithFormat:@"/%@",JSBRIDGE_URL_PARAM]
+#define JS_BRIDGE_FILE_NAME             @"JSBridge"
+#define JS_BRIDGE                       @"JSBridge"
+#define JS_BRIDGE_GET_API_DATA          @"_getAPIData"
+#define JS_BRIDGE_GET_JS_EVENT_QUEUE    @"_fetchJSEventQueue"
+#define JS_BRIDGE_SEND_NATIVE_QUEUE     @"_handleMessageFromNative"
 
-#define JS_BRIDGE_FILE_NAME         @"JSBridge"
-#define JS_BRIDGE                   @"JSBridge"
-#define JS_BRIDGE_GET_JS_QUEUE      @"_fetchJSQueue"
-#define JS_BRIDGE_SEND_NATIVE_QUEUE @"_handleMessageFromNative"
+#define JSBRIDGE_URL_EVENT_REL_PATH [NSString stringWithFormat:@"/%@",JSBRIDGE_URL_EVENT]
+#define JSBRIDGE_URL_API_REL_PATH   [NSString stringWithFormat:@"/%@",JSBRIDGE_URL_API]
 
 #define JSB_LOG_ENABLE              1
-#define JSB_LOG_SIMPLE				1
+#define JSB_LOG_MODE                0
 
 #ifdef JSB_LOG_ENABLE
-#if(JSB_LOG_SIMPLE == 1)
-#define JSBLog(s, ...) NSLog(@"JSBridge: %@\n", [NSString stringWithFormat:(s), ## __VA_ARGS__]);
-#else
+#if(JSB_LOG_MODE == 1)
 #define JSBLog(s, ...) NSLog(@"\t<%p %@:(%d)>\t%@\n", self, [[NSString stringWithUTF8String:__FUNCTION__] lastPathComponent], __LINE__, [NSString stringWithFormat:(s), ## __VA_ARGS__]);
+#else
+#define JSBLog(s, ...) NSLog(@"JSBridge: %@",[NSString stringWithFormat:(s), ## __VA_ARGS__]);
 #endif
 #else
 #define JSBLog(s, ...)

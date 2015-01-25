@@ -24,7 +24,7 @@ public class MainActivity extends Activity {
 			@Override
 			public void hanlder(JSONObject data, JSBridgeCallback responseCallback) {
 				JSBridge.Log("MainActivity","JSBridgeHandler",data+" with CB:"+responseCallback);
-				responseCallback.callBack(JSBridge.putKeyValue(null, "initData","Response for message from Native for UN-SUPPORTED API"));
+				JSBridge.callEventCallback(responseCallback, JSBridge.putKeyValue(null, "initData","Response for message from Native for UN-SUPPORTED API"));
 			}
 		});
 

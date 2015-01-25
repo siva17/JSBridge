@@ -87,9 +87,8 @@
 #pragma mark - PRIVATE APIs
 
 -(void)dispatchMessage:(NSDictionary *)message {
-    NSString *messageJSON = [JSBridge serializeMessage:message];
-    JSBLog(@"dispatchMessage: SEND: %@",messageJSON);
-
+    NSString *messageJSON = [JSBridge stringifyJSON:message];
+    JSBLog(@"JSB Action: SEND: %@",messageJSON);
     messageJSON = [messageJSON stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"];
     messageJSON = [messageJSON stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
     messageJSON = [messageJSON stringByReplacingOccurrencesOfString:@"\'" withString:@"\\\'"];
@@ -118,13 +117,13 @@
     }
 }
 
--(NSObject *)getNativeModuleFromName:(NSString *)name {
+-(NSObject *)getNativeModuleFromName:(NSString *)name webView:(UIWebView *)webView {
     NSObject *nativeModule	= [nativeModules objectForKey:name];
     if(nativeModule == nil) {
         Class objClass = NSClassFromString(name);
         if(objClass) {
             @try {
-                nativeModule = [(JSBridgeBase *)[objClass alloc] initWithBridge:self webView:jsWebView];
+                nativeModule = [[objClass alloc] initWithJSBridge:self webView:webView];
                 [nativeModules setObject:nativeModule forKey:name];
                 }
             @catch (NSException *exception) {
@@ -134,13 +133,33 @@
             @finally {
             }
         } else {
-            JSBLog(@"getNativeModuleFromName: Unsupported Module: %@",name);
+            JSBLog(@"Unsupported Module: %@",name);
         }
     }
     return nativeModule;
 }
 
--(void)processEventHandler:(NSDictionary *)message responseCallback:(JSBResponseCallback)responseCallback {
+-(void)handleReturnValue:(NSInvocation *)invoker sig:(NSMethodSignature *)sig webView:(UIWebView *)webView apiName:(NSString *)apiName status:(BOOL)status {
+    NSString *retValue = nil;
+    if((invoker != nil) && (sig != nil)) {
+        if([sig methodReturnLength] > 0) {
+            [invoker getReturnValue:&retValue];
+            if(retValue) {
+                JSBLog(@"handleReturnValue:%@",retValue);
+                retValue = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,(CFStringRef) retValue, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8));
+            }
+        }
+    }
+    
+    NSString *dataStr = @"";
+    if(status == false) retValue = [NSString stringWithFormat:@"UN-SUPPORTED API: %@",apiName];
+    if(retValue) dataStr = [NSString stringWithFormat:@",'data':'%@'",retValue];
+    [webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"JSBridge.nativeReturnValue = \"{'status':'%@'%@}\"",((status)?(@"true"):(@"false")),dataStr]];
+    
+    RELEASE_MEM(retValue);
+}
+
+-(void)processEventHandler:(UIWebView *)webView message:(NSDictionary *)message responseCallback:(JSBResponseCallback)responseCallback {
     NSString *eventName = message[@"eventName"];
     if(eventName) {
         JSBHandler handler = messageHandlers[eventName];
@@ -148,11 +167,10 @@
             @try {
                 // eventName is not registered and so create an instance of the API
                 NSArray *api        = [eventName componentsSeparatedByString:@"."];
-                NSObject *jsModule  = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0]];
+                NSObject *jsModule  = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0] webView:webView];
                 if(jsModule) {
-                    
-                    SEL selector            = NSSelectorFromString([NSString stringWithFormat:@"JSBEvent_%@:responseCallback:",(NSString*)[api objectAtIndex:1]]);
-                    NSMethodSignature *sig  = [[jsModule class] instanceMethodSignatureForSelector:selector];
+                    SEL selector                = NSSelectorFromString([NSString stringWithFormat:@"JSBEvent_%@:responseCallback:",(NSString*)[api objectAtIndex:1]]);
+                    NSMethodSignature *sig      = [[jsModule class] instanceMethodSignatureForSelector:selector];
                     if(sig) {
                         NSInvocation *invoker   = [NSInvocation invocationWithMethodSignature:sig];
                         invoker.selector        = selector;
@@ -179,22 +197,27 @@
             @finally {
             }
         }
-        if(handler) {
-            handler(message[@"data"], responseCallback);
+        if(handler == nil) {
+            handler = ^(id data, JSBResponseCallback responseCallback) {
+                if(responseCallback) {
+                    responseCallback(@{@"status":@false,@"data":[NSString stringWithFormat:@"UN-SUPPORTED EVENT: %@",eventName]});
+                }
+            };
         }
+        handler(message[@"data"], responseCallback);
     } else {
         if(bridgeHandler) {
             bridgeHandler(message[@"data"], responseCallback);
         } else {
-            JSBLog(@"processEventHandler: EXCEPTION: No handler for message from JS: %@",message);
+            JSBLog(@"EXCEPTION: No handler for message from JS: %@",message);
         }
     }
 }
 
--(void)flushMessageQueue {
-    NSString *messageQueueString = [jsWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"%@.%@();",JS_BRIDGE,JS_BRIDGE_GET_JS_QUEUE]];
+-(void)processJSEventQueue:(UIWebView *)webView {
+    NSString *messageQueueString = [webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"%@.%@();",JS_BRIDGE,JS_BRIDGE_GET_JS_EVENT_QUEUE]];
     
-    id messages = [JSBridge deserializeMessageJSON:messageQueueString];
+    id messages = [JSBridge parseJSONArray:messageQueueString];
     if(![messages isKindOfClass:[NSArray class]]) {
         JSBLog(@"flushMessageQueue: WARNING: Invalid %@ received: %@", [messages class], messages);
         return;
@@ -206,7 +229,6 @@
             continue;
         }
         JSBLog(@"flushMessageQueue: RCVD: %@",message);
-
         NSString* responseId = message[@"responseId"];
         if (responseId) {
             JSBResponseCallback responseCallback = responseCallbacks[responseId];
@@ -230,58 +252,43 @@
                 };
             }
             
-            if(message[@"eventName"]) {
-                [self processEventHandler:message responseCallback:responseCallback];
-            } else {
-                if(bridgeHandler) {
-                    bridgeHandler(message[@"data"], responseCallback);
-                } else {
-                    JSBLog(@"flushMessageQueue: EXCEPTION: No handler for message from JS: %@",message);
-                }
-            }
+            [self processEventHandler:webView message:message responseCallback:responseCallback];
         }
     }
 }
 
--(void)processJSAPIRequest:(UIWebView *)webView param:(NSString *)param {
+-(void)processJSAPIRequest:(UIWebView *)webView {
     
-    JSBLog(@"processJSAPIRequest: RCVD: %@",param);
-    
-    NSArray *components = [[param substringFromIndex:1] componentsSeparatedByString:@"&"];
-    
+    NSDictionary *cData = [JSBridge parseJSON:[webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"%@.%@();",JS_BRIDGE,JS_BRIDGE_GET_API_DATA]]];
+    NSString *apiName   = [cData objectForKey:@"api"];
     @try {
         // execute the interfacing method
-        NSArray  *api           = [(NSString*)[components objectAtIndex:0] componentsSeparatedByString:@"."];
-        NSObject *jsModule      = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0]];
-        
-        SEL selector            = NSSelectorFromString([NSString stringWithFormat:@"JSBAPI_%@",(NSString*)[api objectAtIndex:1]]);
-        NSMethodSignature *sig  = [[jsModule class] instanceMethodSignatureForSelector:selector];
-        NSInvocation *invoker   = [NSInvocation invocationWithMethodSignature:sig];
-        invoker.selector        = selector;
-        invoker.target          = jsModule;
-        NSString *configStr     = [(NSString*)[components objectAtIndex:1]stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-        __unsafe_unretained NSDictionary *configData = [NSJSONSerialization JSONObjectWithData:[configStr dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-        if(configData) [invoker setArgument:&configData atIndex:2];
-        [invoker invoke];
-        
-        //return the value by using javascript
-        if([sig methodReturnLength] > 0) {
-            NSString *retValue;
-            [invoker getReturnValue:&retValue];
-            if(retValue) {
-                retValue = (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,(CFStringRef) retValue, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8));
-                [webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"JSBridge.nativeReturnValue = \"%@;\"", retValue]];
-            } else {
-                [webView stringByEvaluatingJavaScriptFromString:@"JSBridge.nativeReturnValue=null;"];
+        NSArray  *api       = [apiName componentsSeparatedByString:@"."];
+        NSObject *jsModule  = [self getNativeModuleFromName:(NSString*)[api objectAtIndex:0] webView:webView];
+        if(jsModule) {
+            SEL selector            = NSSelectorFromString([NSString stringWithFormat:@"JSBAPI_%@",(NSString*)[api objectAtIndex:1]]);
+            NSMethodSignature *sig  = [[jsModule class] instanceMethodSignatureForSelector:selector];
+            NSInvocation *invoker   = [NSInvocation invocationWithMethodSignature:sig];
+            invoker.selector        = selector;
+            invoker.target          = jsModule;
+            
+            NSString *apiDataStr    = [cData objectForKey:@"data"];
+            JSBLog(@"JSB API: RCVD: %@(%@)",api,apiDataStr);
+            if(apiDataStr) {
+                NSDictionary *apiData = [JSBridge parseJSON:apiDataStr];
+                [invoker setArgument:&apiData atIndex:2];
             }
+            [invoker invoke];
+            
+            [self handleReturnValue:invoker sig:sig webView:webView apiName:apiName status:true];
+            RELEASE_MEM(invoker);
         } else {
-            [webView stringByEvaluatingJavaScriptFromString:@"JSBridge.nativeReturnValue=null;"];
+            [self handleReturnValue:nil sig:nil webView:webView apiName:apiName status:false];
         }
-        configData = nil;
-        invoker = nil;
     }
     @catch (NSException *exception) {
-        JSBLog(@"processJSAPIRequest: EXCEPTION: %@",[components objectAtIndex:0]);
+        JSBLog(@"processJSAPIRequest: EXCEPTION: %@",exception);
+        [self handleReturnValue:nil sig:nil webView:webView apiName:apiName status:false];
     }
     @finally {
     }
@@ -338,16 +345,19 @@
 }
 
 -(BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
+
+    JSBLog(@"Received: %@",request);
+
     if(webView != jsWebView) return YES;
     
     NSURL *url = [request URL];
     if ([[url scheme] isEqualToString:JSBRIDGE_URL_SCHEME]) {
         if ([[url host] isEqualToString:JSBRIDGE_URL_MESSAGE]) {
-            NSString *param = [url relativePath];
-            if([param isEqualToString:JSBRIDGE_URL_REL_PATH]) {
-                [self flushMessageQueue];
-            } else {
-                [self processJSAPIRequest:webView param:param];
+            NSString *relativePath = [url relativePath];
+            if([relativePath isEqualToString:JSBRIDGE_URL_EVENT_REL_PATH]) {
+                [self processJSEventQueue:webView];
+            } else if([relativePath isEqualToString:JSBRIDGE_URL_API_REL_PATH]) {
+                [self processJSAPIRequest:webView];
             }
         } else {
             JSBLog(@"shouldStartLoadWithRequest: WARNING: Received unknown command %@",url);
@@ -364,12 +374,75 @@
 
 #pragma mark - PRIVATE STATIC APIs
 
-+(NSString *)serializeMessage:(id)message {
-    return [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:message options:0 error:nil] encoding:NSUTF8StringEncoding];
++(NSArray*)parseJSONArray:(NSString *)messageJSON {
+    return [NSJSONSerialization JSONObjectWithData:[messageJSON dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
 }
 
-+(NSArray*)deserializeMessageJSON:(NSString *)messageJSON {
++(NSDictionary *)getReturnObjectWithStatus:(BOOL)status apiName:(NSString *)apiName data:(id)data {
+    NSMutableDictionary *retValue = [[NSMutableDictionary alloc] initWithObjectsAndKeys:((status)?(@"true"):(@"false")),@"status",nil];
+    if(apiName) [retValue setObject:apiName forKey:@"apiName"];
+    if(data) [retValue setObject:data forKey:@"data"];
+    return retValue;
+}
++(NSDictionary *)getReturnObjectWithStatus:(BOOL)status data:(id)data {
+    return [JSBridge getReturnObjectWithStatus:status apiName:nil data:data];
+}
+
++(void)callCallbackWithStatus:(UIWebView *)wv inJSON:(NSDictionary *)inJSON outJSON:(id)outJSON status:(BOOL)status {
+    if(inJSON) {
+        NSString *callbackID = [inJSON objectForKey:@"callbackID"];
+        if(callbackID) {
+            
+            NSString *removeAfterExecute = [inJSON objectForKey:@"removeAfterExecute"];
+            if(!removeAfterExecute) removeAfterExecute = @"true";
+            
+            NSDictionary *retObj     = [JSBridge getReturnObjectWithStatus:status data:outJSON];
+            NSString *retVal         = [JSBridge stringifyJSON:retObj];
+            NSString *jsAPIToExecute = [NSString stringWithFormat:@"JSBridge._invokeJSCallback(\"%@\", %@, %@);",callbackID,removeAfterExecute,retVal];
+            [wv stringByEvaluatingJavaScriptFromString:jsAPIToExecute];
+        }
+    }
+}
+
++(void)callEventCallback:(JSBResponseCallback)responseCallback data:(NSDictionary *)data status:(BOOL)status {
+    if(responseCallback != nil) {
+        responseCallback([JSBridge getReturnObjectWithStatus:status data:data]);
+    }
+}
+
+#pragma mark - PUBLIC STATIC APIs
+
++(NSString *)stringifyJSON:(id)message {
+    if([NSJSONSerialization isValidJSONObject:message]) {
+        return [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:message options:0 error:nil] encoding:NSUTF8StringEncoding];
+    }
+    return @"";
+}
+
++(NSDictionary*)parseJSON:(NSString *)messageJSON {
     return [NSJSONSerialization JSONObjectWithData:[messageJSON dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingAllowFragments error:nil];
+}
+
++(NSString *)getString:(NSString *)str {
+    return ((str)?(str):(@""));
+}
+
++(NSDictionary *)putKeyValue:(NSMutableDictionary *)src key:(NSString *)key value:(id)value {
+    if(src == nil) src = [[NSMutableDictionary alloc]init];
+    if((key != nil) && (value != nil)) [src setObject:value forKey:key];
+    return src;
+}
+
++(NSDictionary *)getReturnObject:(id)data {
+    return [JSBridge getReturnObjectWithStatus:true data:data];
+}
+
++(void)callCallbackForWebView:(UIWebView *)wv inJSON:(NSDictionary *)inJSON outJSON:(id)outJSON {
+    [JSBridge callCallbackWithStatus:wv inJSON:inJSON outJSON:outJSON status:true];
+}
+
++(void)callEventCallback:(JSBResponseCallback)responseCallback data:(id)data {
+    [JSBridge callEventCallback:responseCallback data:data status:true];
 }
 
 #pragma mark - PUBLIC APIs
@@ -394,6 +467,7 @@
 -(void)send:(NSString *)eventName data:(id)data responseCallback:(JSBResponseCallback)responseCallback {
     NSMutableDictionary* message = [NSMutableDictionary dictionary];
     
+    message[@"status"] = @"true";
     if(data) message[@"data"] = data;
     if(eventName) message[@"eventName"] = eventName;
     

@@ -29,6 +29,15 @@
 
 #import "JSBInclude.h"
 @interface JSBridge : NSObject<UIWebViewDelegate>
+
++(NSString *)stringifyJSON:(id)message;
++(NSDictionary *)parseJSON:(NSString *)messageJSON;
++(NSString *)getString:(NSString *)str;
++(NSDictionary *)putKeyValue:(NSMutableDictionary *)src key:(NSString *)key value:(id)value;
++(NSDictionary *)getReturnObject:(id)data;
++(void)callCallbackForWebView:(UIWebView *)wv inJSON:(NSDictionary *)inJSON outJSON:(id)outJSON;
++(void)callEventCallback:(JSBResponseCallback)responseCallback data:(id)data;
+
 -(id)initWithWebView:(UIWebView*)webView webViewDelegate:(NSObject<UIWebViewDelegate>*)webViewDelegate bundle:(NSBundle*)bundle handler:(JSBHandler)handler;
 -(void)send:(NSString *)eventName data:(id)data responseCallback:(JSBResponseCallback)responseCallback;
 -(void)registerEvent:(NSString *)eventName handler:(JSBHandler)handler;

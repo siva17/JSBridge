@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename package &apos;com.siva4u.jsbridge.example&apos; to &apos;com.siva4u.example&apos;&#x0A;- Original project: &apos;JSBridge&apos;&#x0A;- Original element: &apos;JSBridge/src/com.siva4u.jsbridge.example&apos;&#x0A;- Renamed element: &apos;JSBridge/src/com.siva4u.example&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" description="Rename package &apos;com.siva4u.jsbridge.example&apos;" flags="589830" hierarchical="false" id="org.eclipse.jdt.ui.rename.package" input="/src&lt;com.siva4u.jsbridge.example" name="com.siva4u.example" qualified="false" references="true" stamp="1422212214113" textual="false" version="1.0"/>
+</session>
