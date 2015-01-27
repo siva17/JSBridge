@@ -248,20 +248,20 @@
     };
 
     w.JSBridge = {
-        init    : init,
-        send    : send,
-        callAPI : callAPI,
+        init    : init.bind(this),
+        send    : send.bind(this),
+        callAPI : callAPI.bind(this),
   
-        registerEvent   : registerEvent,
-        deRegisterEvent : deRegisterEvent,
+        registerEvent   : registerEvent.bind(this),
+        deRegisterEvent : deRegisterEvent.bind(this),
 
-        callAPICallback     : callAPICallback,
-        callEventCallback   : callEventCallback,
+        callAPICallback     : callAPICallback.bind(this),
+        callEventCallback   : callEventCallback.bind(this),
   
-        _fetchJSEventQueue      : _fetchJSEventQueue,
-        _handleMessageFromNative: _handleMessageFromNative,
-        _getAPIData             : _getAPIData,
-        _invokeJSCallback       : _invokeJSCallback,
+        _fetchJSEventQueue      : _fetchJSEventQueue.bind(this),
+        _handleMessageFromNative: _handleMessageFromNative.bind(this),
+        _getAPIData             : _getAPIData.bind(this),
+        _invokeJSCallback       : _invokeJSCallback.bind(this),
     }
 
     messagingIframe = doc.createElement('iframe');
